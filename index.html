@@ -6,7 +6,7 @@
 <title>My Library</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Quicksand:wght@400;500;600;700&family=Patrick+Hand&display=swap" rel="stylesheet">
-  <style>
+<style>
   :root{
     --paper:#FBF6EC;
     --paper-deep:#F3ECDC;
@@ -213,9 +213,7 @@
   .review-grid .review-card:nth-child(odd){ transform:rotate(-0.4deg); }
   .review-grid .review-card:nth-child(even){ transform:rotate(0.4deg); }
   .review-text{ white-space:pre-wrap; font-size:0.95rem; margin-top:8px; }
-  .enhance-row{ display:flex; align-items:center; gap:10px; margin:8px 0 4px; flex-wrap:wrap; }
   .hint{ color:var(--ink-soft); font-size:0.8rem; }
-  .enhance-preview{ background:var(--accent-soft); border:2px dashed var(--accent); border-radius:8px; padding:12px; margin:10px 0; }
 
   .quote-grid .quote-card:nth-child(odd){ transform:rotate(-0.5deg); }
   .quote-grid .quote-card:nth-child(even){ transform:rotate(0.5deg); }
@@ -355,18 +353,6 @@
               <label class="mini-label">Finished<input id="review-finish" type="date" /></label>
             </div>
             <textarea id="reviewText" rows="5" placeholder="What did you think of this book?"></textarea>
-            <div class="enhance-row">
-              <button class="btn-secondary" id="enhanceBtn" type="button">✨ Enhance with AI</button>
-              <span class="hint">Polishes grammar &amp; flow, keeps your opinions</span>
-            </div>
-            <div id="enhancePreview" class="enhance-preview hidden">
-              <p class="hint">Suggested version:</p>
-              <p id="enhancePreviewText"></p>
-              <div class="modal-actions">
-                <button class="btn-secondary" id="dismissEnhanceBtn" type="button">Keep mine</button>
-                <button class="btn-primary" id="useEnhanceBtn" type="button">Use this</button>
-              </div>
-            </div>
             <div class="inline-form">
               <label class="mini-label">Note colour<input id="review-color" type="color" /></label>
               <label class="mini-label">Font
@@ -1022,45 +1008,6 @@
     );
   }
 
-  async function enhanceReview(){
-    var ta = document.getElementById('reviewText');
-    var text = ta.value.trim();
-    if(!text){ showToast('Write your thoughts first, then enhance.'); return; }
-    var btn = document.getElementById('enhanceBtn');
-    var original = btn.textContent;
-    btn.textContent = 'Enhancing…'; btn.disabled = true;
-    try{
-      var res = await fetch('https://api.anthropic.com/v1/messages', {
-        method:'POST',
-        headers:{ 'Content-Type':'application/json' },
-        body: JSON.stringify({
-          model:'claude-sonnet-4-6',
-          max_tokens:1000,
-          messages:[{ role:'user', content:
-            "Polish this personal book review. Keep the writer's own voice and opinions, fix grammar, and make the language a little more vivid, but do not invent new opinions or facts. Return only the revised review text, nothing else.\n\nReview:\n" + text
-          }]
-        })
-      });
-      var data = await res.json();
-      var out = (data.content || []).map(function(b){ return b.text || ''; }).join('').trim();
-      if(out){
-        document.getElementById('enhancePreview').classList.remove('hidden');
-        document.getElementById('enhancePreviewText').textContent = out;
-        window.__enhancedText = out;
-      } else {
-        showToast('Could not enhance right now. Try again later.');
-      }
-    } catch(e){
-      showToast('Could not enhance right now. Try again later.');
-    }
-    btn.textContent = original; btn.disabled = false;
-  }
-  function useEnhanced(){
-    if(window.__enhancedText){ document.getElementById('reviewText').value = window.__enhancedText; }
-    document.getElementById('enhancePreview').classList.add('hidden');
-  }
-  function dismissEnhanced(){ document.getElementById('enhancePreview').classList.add('hidden'); }
-
   /* ============ quotes ============ */
   function renderQuotes(){
     document.getElementById('quote-color').value = state.settings.noteColor;
@@ -1150,12 +1097,8 @@
       document.getElementById(id).value = '';
     });
     document.getElementById('reviewText').value = '';
-    document.getElementById('enhancePreview').classList.add('hidden');
     scheduleSave(); renderReviews();
   });
-  document.getElementById('enhanceBtn').addEventListener('click', enhanceReview);
-  document.getElementById('useEnhanceBtn').addEventListener('click', useEnhanced);
-  document.getElementById('dismissEnhanceBtn').addEventListener('click', dismissEnhanced);
 
   document.getElementById('quote-addBtn').addEventListener('click', function(){
     var text = document.getElementById('quoteText').value.trim();
@@ -1263,3 +1206,4 @@
 </script>
 </body>
 </html>
+
